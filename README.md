@@ -1,33 +1,46 @@
 # Daily Expense Tracker 💰📊
 
-A modern, high-performance personal finance tracking web application built with React, Vite, Chart.js, and Lucide Icons.
+A modern, full-stack personal finance tracking application featuring a clean separation between the **React Frontend** and the **Node.js/Express Backend REST API**.
 
 ## 🚀 Live Demo & Deployment
-- **Live URL**: [https://24eg105r44.github.io/daily-expense-tracker/](https://24eg105r44.github.io/daily-expense-tracker/)
-- Automated CI/CD pipeline deploys changes to GitHub Pages on every push to `main`.
+- **Frontend Live URL**: [https://24eg105r44.github.io/daily-expense-tracker/](https://24eg105r44.github.io/daily-expense-tracker/)
+- Automated CI/CD pipeline deploys the frontend to GitHub Pages on every push to `main`.
 
 ---
 
-## 📁 Project Structure
+## 📁 Separated Architecture Overview
 
 ```text
 daily-expense-tracker/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml        # GitHub Actions workflow for automated Pages deployment
-├── frontend/                 # React frontend application
-│   ├── public/               # Static assets & icons
-│   ├── src/                  # React components, state, hooks & styles
-│   │   ├── assets/           # Media & graphics
-│   │   ├── components/       # UI Components (Charts, Modals, Navbar, etc.)
-│   │   ├── data/             # Initial sample datasets
-│   │   ├── styles/           # Global styles and design system
-│   │   ├── App.jsx           # Main Application component
-│   │   └── main.jsx          # Vite React entry point
-│   ├── index.html            # Single Page App HTML template
-│   ├── package.json          # Frontend dependencies & scripts
-│   └── vite.config.js        # Vite bundler configuration
-├── package.json              # Root package configuration with proxy scripts
+│       └── deploy.yml            # CI/CD automated deployment workflow for frontend
+│
+├── frontend/                     # ⚛️ React 19 + Vite Frontend SPA
+│   ├── public/                   # Static assets & icons
+│   ├── src/
+│   │   ├── assets/               # Media & graphics
+│   │   ├── components/           # UI components (Charts, Modals, Navbar, etc.)
+│   │   ├── data/                 # Sample seed data & default categories
+│   │   ├── services/             # API client connecting to backend with offline fallback
+│   │   ├── styles/               # Glassmorphism styling & themes
+│   │   ├── App.jsx               # Main React Application
+│   │   └── main.jsx              # Vite entry point
+│   ├── index.html                # HTML entry
+│   ├── package.json              # Frontend dependencies
+│   └── vite.config.js            # Vite configuration
+│
+├── backend/                      # 🌐 Node.js + Express REST API Backend
+│   ├── src/
+│   │   ├── controllers/          # Business logic (expenses, categories, recurring, splits, stats)
+│   │   ├── data/                 # Data store with persistent db.json sync
+│   │   ├── routes/               # Modular Express API routes
+│   │   └── server.js             # Express app entry point, CORS & middleware
+│   ├── .env.example              # Environment variables template
+│   ├── package.json              # Backend dependencies
+│   └── README.md                 # Detailed REST API endpoints documentation
+│
+├── package.json                  # Root monorepo scripts for running frontend & backend
 └── README.md
 ```
 
@@ -37,47 +50,65 @@ daily-expense-tracker/
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
-- npm or yarn
+- npm
 
-### Installation
+### 1. Installation
 
-From the repository root:
+Install dependencies for both frontend and backend from the root directory:
 ```bash
-# Install frontend dependencies
-npm --prefix frontend install
+npm run install:all
 ```
+*(Or install individually: `npm --prefix frontend install` and `npm --prefix backend install`)*
 
-### Running Locally
+---
 
+### 2. Running Locally
+
+#### Option A: Run Frontend & Backend Independently
+- **Start Backend API** (runs on `http://localhost:5000`):
+  ```bash
+  npm run dev:backend
+  ```
+- **Start Frontend App** (runs on `http://localhost:5173`):
+  ```bash
+  npm run dev:frontend
+  ```
+
+#### Option B: Standalone Frontend
+You can run the frontend on its own without starting the backend:
 ```bash
-# Start development server from root
-npm run dev
-
-# Or directly inside the frontend folder
-cd frontend
 npm run dev
 ```
+The frontend automatically detects whether the backend is available. If the backend is active, it syncs transactions through the REST API; if offline, it functions seamlessly using local browser storage.
 
-### Building for Production
+---
+
+### 3. Production Build & Preview
 
 ```bash
-# Build production bundle from root
+# Build frontend bundle
 npm run build
 
-# Preview production build locally
+# Preview build locally
 npm run preview
 ```
 
 ---
 
-## 🌐 Deployment to GitHub Pages
+## 📡 Backend REST API Endpoints
 
-The repository is configured to build and deploy to GitHub Pages automatically via GitHub Actions:
-1. Ensure GitHub Pages is enabled in your repository:
-   - Go to **Settings** > **Pages**
-   - Under **Build and deployment** > **Source**, select **GitHub Actions** (or branch `gh-pages`)
-2. Push any changes to `main`:
-   ```bash
-   git push origin main
-   ```
-3. GitHub Actions builds the `frontend` application and publishes it to GitHub Pages.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service health status & uptime |
+| `GET` | `/api/expenses` | Get expenses (with search/filter query params) |
+| `POST` | `/api/expenses` | Create a new expense |
+| `PUT` | `/api/expenses/:id` | Update an existing expense |
+| `DELETE`| `/api/expenses/:id` | Delete an expense |
+| `GET` | `/api/categories` | Categories & monthly budget limits |
+| `PUT` | `/api/categories/:id` | Update category limits |
+| `GET` | `/api/recurring` | Recurring subscriptions & bills |
+| `POST` | `/api/recurring` | Add recurring bill |
+| `DELETE`| `/api/recurring/:id` | Delete recurring bill |
+| `GET` | `/api/splits` | Group bill splits |
+| `POST` | `/api/splits` | Create shared split group |
+| `GET` | `/api/stats/summary` | Analytics & budget breakdown |

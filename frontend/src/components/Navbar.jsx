@@ -20,6 +20,7 @@ export default function Navbar({
   setCurrency, 
   theme, 
   setTheme, 
+  backendOnline,
   onOpenAddModal, 
   onExportCSV 
 }) {
@@ -43,6 +44,14 @@ export default function Navbar({
       </div>
 
       <div className="nav-actions">
+        {/* Backend Connectivity Status */}
+        <span 
+          className={`status-pill ${backendOnline ? 'online' : 'offline'}`}
+          title={backendOnline ? 'Connected to local REST API backend' : 'Using browser storage (offline mode)'}
+        >
+          <span className="dot" /> {backendOnline ? 'API Connected' : 'Local Mode'}
+        </span>
+
         {/* Currency Switcher */}
         <select 
           className="select-input" 

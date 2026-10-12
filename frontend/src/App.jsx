@@ -15,6 +15,8 @@ import {
   SAMPLE_SHARED_SPLITS 
 } from './data/initialData';
 
+import { api } from './services/api';
+
 import { LayoutDashboard, PieChart, Receipt, Users, Repeat, RotateCcw } from 'lucide-react';
 
 export default function App() {
@@ -22,6 +24,7 @@ export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('et_theme') || 'dark');
   const [currency, setCurrency] = useState(() => localStorage.getItem('et_currency') || '$');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [backendOnline, setBackendOnline] = useState(false);
   
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('et_categories');
@@ -73,12 +76,37 @@ export default function App() {
     localStorage.setItem('et_splits', JSON.stringify(splits));
   }, [splits]);
 
+  // Check backend availability on mount and sync if active
+  useEffect(() => {
+    async function checkAndSync() {
+      const isOnline = await api.checkHealth();
+      setBackendOnline(isOnline);
+      if (isOnline) {
+        try {
+          const res = await api.getExpenses();
+          if (res?.data && res.data.length > 0) {
+            setExpenses(res.data);
+          }
+        } catch {
+          // Fall back gracefully to localStorage
+        }
+      }
+    }
+    checkAndSync();
+  }, []);
+
   // Actions
   const handleSaveExpense = (expenseData) => {
     if (expenseToEdit) {
       setExpenses(expenses.map(e => e.id === expenseData.id ? expenseData : e));
+      if (backendOnline) {
+        api.updateExpense(expenseData.id, expenseData).catch(err => console.warn(err));
+      }
     } else {
       setExpenses([expenseData, ...expenses]);
+      if (backendOnline) {
+        api.createExpense(expenseData).catch(err => console.warn(err));
+      }
       // Trigger subtle celebration
       confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
     }
@@ -87,6 +115,9 @@ export default function App() {
   const handleDeleteExpense = (id) => {
     if (window.confirm('Are you sure you want to delete this expenditure entry?')) {
       setExpenses(expenses.filter(e => e.id !== id));
+      if (backendOnline) {
+        api.deleteExpense(id).catch(err => console.warn(err));
+      }
     }
   };
 
@@ -167,6 +198,7 @@ export default function App() {
         setCurrency={setCurrency}
         theme={theme}
         setTheme={setTheme}
+        backendOnline={backendOnline}
         onOpenAddModal={() => {
           setExpenseToEdit(null);
           setIsFormOpen(true);
